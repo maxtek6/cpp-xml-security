@@ -33,6 +33,8 @@
 
 #include <cassert>
 
+#include <functional>
+#include <memory>
 #include <memory.h>
 #include <iostream>
 #include <stdlib.h>
@@ -494,7 +496,8 @@ bool reValidateSig(DOMImplementation *impl, DOMDocument * inDoc, XSECCryptoKey *
 		 */
 
 		XSECProvider prov;
-		prov.setDefaultURIResolver(new XSECURIResolverXerces());
+		std::unique_ptr<XSECURIResolver> resolver( new XSECURIResolverXerces());
+		prov.setDefaultURIResolver(resolver.get());
 		DSIGSignature * sig = prov.newSignatureFromDOM(doc);
 		sig->load();
 		sig->setSigningKey(k);
@@ -544,10 +547,11 @@ void unitTestEnvelopingSignature(DOMImplementation * impl) {
 		// Create the signature
 
 		XSECProvider prov;
+		std::unique_ptr<XSECURIResolver> resolver( new XSECURIResolverXerces());
 		DSIGSignature *sig;
 		DOMElement *sigNode;
 
-		prov.setDefaultURIResolver(new XSECURIResolverXerces());
+		prov.setDefaultURIResolver(resolver.get());
 
 		sig = prov.newSignature();
 		sig->setDSIGNSPrefix(MAKE_UNICODE_STRING("ds"));
@@ -766,7 +770,8 @@ void unitTestLongSHA(DOMImplementation * impl) {
 		// Create the signature
 
 		XSECProvider prov;
-		prov.setDefaultURIResolver(new XSECURIResolverXerces());
+		std::unique_ptr<XSECURIResolver> resolver(new XSECURIResolverXerces());
+		prov.setDefaultURIResolver(resolver.get());
 		DSIGSignature *sig;
 		DOMElement *sigNode;
 		DSIGReference *ref[4];
@@ -957,11 +962,11 @@ void unitTestSig(DOMImplementation * impl, XSECCryptoKey * k, const XMLCh * AlgU
 		// Create the signature
 
 		XSECProvider prov;
-		prov.setDefaultURIResolver(new XSECURIResolverXerces());
-		DSIGSignature *sig;
+		std::unique_ptr<XSECURIResolver> resolver(new XSECURIResolverXerces());
+		prov.setDefaultURIResolver(resolver.get());
+		std::unique_ptr<DSIGSignature, std::function<void(DSIGSignature*)>> sig(prov.newSignature(), [&](DSIGSignature* ptr) { prov.releaseSignature(ptr); });
 		DOMElement *sigNode;
 		
-		sig = prov.newSignature();
 		sig->setDSIGNSPrefix(MAKE_UNICODE_STRING("ds"));
 		sig->setPrettyPrint(true);
 
@@ -1080,14 +1085,14 @@ void unitTestEC(DOMImplementation * impl) {
 
     /* First we load some keys to use! */
 
-    XSECCryptoKeyEC * ecKey;
+    std::unique_ptr<XSECCryptoKeyEC> ecKey;
 
     // Load the key
     BIO * bioMem = BIO_new(BIO_s_mem());
     BIO_puts(bioMem, s_tstECPrivateKey);
     EVP_PKEY * pk = PEM_read_bio_PrivateKey(bioMem, NULL, NULL, NULL);
 
-    ecKey = new OpenSSLCryptoKeyEC(pk);
+    ecKey.reset(new OpenSSLCryptoKeyEC(pk));
 
     BIO_free(bioMem);
     EVP_PKEY_free(pk);
@@ -1151,12 +1156,13 @@ void testSignature(DOMImplementation *impl) {
 	// Check signature functions
 
 	XSECProvider prov;
+	std::unique_ptr<XSECURIResolver> resolver(new XSECURIResolverXerces());
 	DSIGSignature *sig;
 	DSIGReference *ref[10];
 	DOMElement *sigNode;
 	int refCount;
 
-	prov.setDefaultURIResolver(new XSECURIResolverXerces());
+	prov.setDefaultURIResolver(resolver.get());
 
 	try {
 		
@@ -1513,11 +1519,11 @@ void unitTestCipherReference(DOMImplementation * impl) {
 
 	// Use key k to wrap a test key, decrypt it and make sure it is still OK
 	XSECProvider prov;
-	XENCCipher * cipher;
+	std::unique_ptr<XENCCipher> cipher;
 
 	try {
 
-		cipher = prov.newCipher(doc);
+		cipher.reset(prov.newCipher(doc));
 
 		cerr << "Creating CipherReference ... ";
 
@@ -1623,7 +1629,7 @@ void unitTestElementContentEncrypt(DOMImplementation *impl, XSECCryptoKey * key,
 	// Create and execute cipher
 
 	XSECProvider prov;
-	XENCCipher * cipher;
+	std::unique_ptr<XENCCipher> cipher;
 
 	try {
 		
@@ -1631,7 +1637,7 @@ void unitTestElementContentEncrypt(DOMImplementation *impl, XSECCryptoKey * key,
 		 * Now we have a document, find the data node.
 		 */
 
-		cipher = prov.newCipher(doc);
+		cipher.reset(prov.newCipher(doc));
 		cipher->setXENCNSPrefix(MAKE_UNICODE_STRING("xenc"));
 		cipher->setPrettyPrint(true);
 
@@ -1668,7 +1674,7 @@ void unitTestElementContentEncrypt(DOMImplementation *impl, XSECCryptoKey * key,
 		// Find the EncryptedData node
 		DOMNode * n = findXENCNode(doc, "EncryptedData");
 
-		XENCCipher * cipher2 = prov.newCipher(doc);
+		std::unique_ptr<XENCCipher> cipher2(prov.newCipher(doc));
 
 		cipher2->setKey(key);
 
@@ -1731,7 +1737,7 @@ void unitTestSmallElement(DOMImplementation *impl) {
 	// Create and execute cipher
 
 	XSECProvider prov;
-	XENCCipher * cipher;
+	std::unique_ptr<XENCCipher> cipher;
 
 	try {
 		
@@ -1739,7 +1745,7 @@ void unitTestSmallElement(DOMImplementation *impl) {
 		 * Now we have a document, find the data node.
 		 */
 
-		cipher = prov.newCipher(doc);
+		cipher.reset(prov.newCipher(doc));
 		cipher->setXENCNSPrefix(MAKE_UNICODE_STRING("xenc"));
 		cipher->setPrettyPrint(true);
 
@@ -1777,7 +1783,7 @@ void unitTestSmallElement(DOMImplementation *impl) {
 		// Find the EncryptedData node
 		DOMNode * n = findXENCNode(doc, "EncryptedData");
 
-		XENCCipher * cipher2 = prov.newCipher(doc);
+		std::unique_ptr<XENCCipher> cipher2(prov.newCipher(doc));
 
 		cipher2->setKey(ks);
 
@@ -1838,7 +1844,7 @@ void unitTestKeyEncrypt(
 
 	// Use key k to wrap a test key, decrypt it and make sure it is still OK
 	XSECProvider prov;
-	XENCCipher * cipher;
+	std::unique_ptr<XENCCipher> cipher;
 
 	try {
 		
@@ -1848,7 +1854,7 @@ void unitTestKeyEncrypt(
 
 		static unsigned char toEncryptStr[] = "A test key to use for da";
 
-		cipher = prov.newCipher(doc);
+		cipher.reset(prov.newCipher(doc));
 		cipher->setXENCNSPrefix(MAKE_UNICODE_STRING("xenc"));
 		cipher->setPrettyPrint(true);
 
@@ -2123,7 +2129,7 @@ void testEncrypt(DOMImplementation *impl) {
 	// Check signature functions
 
 	XSECProvider prov;
-	XENCCipher * cipher;
+	std::unique_ptr<XENCCipher> cipher;
 
 	try {
 		
@@ -2141,7 +2147,7 @@ void testEncrypt(DOMImplementation *impl) {
 		
 		}
 
-		cipher = prov.newCipher(doc);
+		cipher.reset(prov.newCipher(doc));
 		cipher->setXENCNSPrefix(MAKE_UNICODE_STRING("xenc"));
 		cipher->setPrettyPrint(true);
 
@@ -2220,7 +2226,7 @@ void testEncrypt(DOMImplementation *impl) {
 		// Find the EncryptedData node
 		DOMNode * n = findXENCNode(doc, "EncryptedData");
 
-		XENCCipher * cipher2 = prov.newCipher(doc);
+		std::unique_ptr<XENCCipher> cipher2(prov.newCipher(doc));
 
 		XSECCryptoSymmetricKey * k2;
 		
