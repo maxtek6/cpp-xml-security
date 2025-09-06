@@ -29,7 +29,7 @@
  */
 
 #define XSEC_VERSION_MAJOR   3
-#define XSEC_VERSION_MEDIUM  0
+#define XSEC_VERSION_MEDIUM  1
 #define XSEC_VERSION_MINOR   0
 
 // --------------------------------------------------------------------------------

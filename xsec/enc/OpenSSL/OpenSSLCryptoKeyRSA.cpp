@@ -57,7 +57,7 @@ namespace {
     // The MGF code is limited to SHA-1 in accordance with the XML Encryption spec.
     // 0.9.8+ has a public MGF routine to call, this is a copy of it for older versions.
 
-#ifndef XSEC_OPENSSL_HAVE_MGF1
+#ifndef OPENSSL_VERSION_NUMBER < 0x0090800fL
     int PKCS1_MGF1(unsigned char *mask, long len,
             const unsigned char *seed, long seedlen, const EVP_MD *dgst)
     {

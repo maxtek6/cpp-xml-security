@@ -69,6 +69,7 @@
 #include <xsec/enc/XSECCryptoSymmetricKey.hpp>
 #include <xsec/framework/XSECError.hpp>
 #include <xsec/framework/XSECProvider.hpp>
+#include <xsec/framework/XSECURIResolverXerces.hpp>
 #include <xsec/xenc/XENCCipher.hpp>
 #include <xsec/xenc/XENCEncryptedData.hpp>
 #include <xsec/xenc/XENCEncryptedKey.hpp>
@@ -294,6 +295,13 @@ mPgOiq9TRw6O5mrjSk1rmCx+2o2bnk+tWEysp7AWswUgNGgVkhumq9A=\n\
 
 static char s_keyStr[] = "abcdefghijklmnopqrstuvwxyzabcdef";
 
+// --------------------------------------------------------------------------------
+//           Match two strings
+// --------------------------------------------------------------------------------
+
+static bool match(const std::string & s1, const std::string & s2) {
+	return s1.compare(s2) == 0;
+}
 
 // --------------------------------------------------------------------------------
 //           Find a node
@@ -486,6 +494,7 @@ bool reValidateSig(DOMImplementation *impl, DOMDocument * inDoc, XSECCryptoKey *
 		 */
 
 		XSECProvider prov;
+		prov.setDefaultURIResolver(new XSECURIResolverXerces());
 		DSIGSignature * sig = prov.newSignatureFromDOM(doc);
 		sig->load();
 		sig->setSigningKey(k);
@@ -537,7 +546,9 @@ void unitTestEnvelopingSignature(DOMImplementation * impl) {
 		XSECProvider prov;
 		DSIGSignature *sig;
 		DOMElement *sigNode;
-		
+
+		prov.setDefaultURIResolver(new XSECURIResolverXerces());
+
 		sig = prov.newSignature();
 		sig->setDSIGNSPrefix(MAKE_UNICODE_STRING("ds"));
 		sig->setPrettyPrint(true);
@@ -755,6 +766,7 @@ void unitTestLongSHA(DOMImplementation * impl) {
 		// Create the signature
 
 		XSECProvider prov;
+		prov.setDefaultURIResolver(new XSECURIResolverXerces());
 		DSIGSignature *sig;
 		DOMElement *sigNode;
 		DSIGReference *ref[4];
@@ -945,6 +957,7 @@ void unitTestSig(DOMImplementation * impl, XSECCryptoKey * k, const XMLCh * AlgU
 		// Create the signature
 
 		XSECProvider prov;
+		prov.setDefaultURIResolver(new XSECURIResolverXerces());
 		DSIGSignature *sig;
 		DOMElement *sigNode;
 		
@@ -1142,6 +1155,8 @@ void testSignature(DOMImplementation *impl) {
 	DSIGReference *ref[10];
 	DOMElement *sigNode;
 	int refCount;
+
+	prov.setDefaultURIResolver(new XSECURIResolverXerces());
 
 	try {
 		
@@ -2394,50 +2409,43 @@ int main(int argc, char **argv) {
 
 	while (paramCount < argc) {
 
-		if (_stricmp(argv[paramCount], "--help") == 0 || _stricmp(argv[paramCount], "-h") == 0) {
+		if (match(argv[paramCount], "--help") || match(argv[paramCount], "-h")) {
 			printUsage();
 			exit(0);
 		}
-		else if (_stricmp(argv[paramCount], "--print-docs") == 0 || _stricmp(argv[paramCount], "-p") == 0) {
+		else if (match(argv[paramCount], "--print-docs") || match(argv[paramCount], "-p")) {
 			g_printDocs = true;
 			paramCount++;
 		}
 
-		else if (_stricmp(argv[paramCount], "--signature-only") == 0 || _stricmp(argv[paramCount], "-s") == 0) {
+		else if (match(argv[paramCount], "--signature-only") || match(argv[paramCount], "-s")) {
 			doEncryptionTest = false;
 			doEncryptionUnitTests = false;
 			doSignatureUnitTests = false;
 			paramCount++;
 		}
-		else if (_stricmp(argv[paramCount], "--encryption-only") == 0 || _stricmp(argv[paramCount], "-e") == 0) {
+		else if (match(argv[paramCount], "--encryption-only") || match(argv[paramCount], "-e")) {
 			doSignatureTest = false;
 			doEncryptionUnitTests = false;
 			doSignatureUnitTests = false;
 			paramCount++;
 		}
-		else if (_stricmp(argv[paramCount], "--encryption-unit-only") == 0 || _stricmp(argv[paramCount], "-u") == 0) {
+		else if (match(argv[paramCount], "--encryption-unit-only") || match(argv[paramCount], "-u")) {
 			doEncryptionTest = false;
 			doSignatureTest = false;
 			doSignatureUnitTests = false;
 			paramCount++;
 		}
-		else if (_stricmp(argv[paramCount], "--signature-unit-only") == 0 || _stricmp(argv[paramCount], "-t") == 0) {
+		else if (match(argv[paramCount], "--signature-unit-only") || match(argv[paramCount], "-t")) {
 			doEncryptionTest = false;
 			doSignatureTest = false;
 			doEncryptionUnitTests = false;
 			paramCount++;
 		}
-        else if (_stricmp(argv[paramCount], "--no-gcm") == 0) {
+        else if (match(argv[paramCount], "--no-gcm")) {
             g_testGCM = false;
             paramCount++;
         }
-        /*		else if (stricmp(argv[paramCount], "--xkms-only") == 0 || stricmp(argv[paramCount], "-x") == 0) {
-			doEncryptionTest = false;
-			doSignatureTest = false;
-			doEncryptionUnitTests = false;
-			doSignatureUnitTests = false;
-			paramCount++;
-            }*/
 		else {
 			printUsage();
 			return 2;
