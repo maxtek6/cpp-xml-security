@@ -316,6 +316,8 @@ unsigned int OpenSSLCryptoKeyEC::signBase64SignatureDSA(unsigned char * hashBuf,
 
     BIO_free_all(b64);
 
+    ECDSA_SIG_free(ecdsa_sig);
+
     if (sigValLen <= 0) {
         throw XSECCryptoException(XSECCryptoException::ECError,
             "OpenSSL:EC - Error base64 encoding signature");
