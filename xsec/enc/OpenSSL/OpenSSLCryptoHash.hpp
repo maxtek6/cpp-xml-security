@@ -33,7 +33,6 @@
 
 #include <xsec/framework/XSECDefs.hpp>
 #include <xsec/enc/XSECCryptoHash.hpp>
-
 // OpenSSL Includes
 
 #if defined (XSEC_HAVE_OPENSSL)
@@ -148,13 +147,11 @@ private:
     // Not implemented constructors
     OpenSSLCryptoHash();
 
-    EVP_MD_CTX          * mp_mdctx;                       // Context for digest - storage
+    EVP_MD_CTX          * mp_mdctx;                     // Context for digest - storage
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L)
     EVP_MD_CTX          m_mdctx_store;                  // Context for digest - storage
 #endif
     const EVP_MD        * mp_md;                        // Digest instance
-    unsigned char       m_mdValue[EVP_MAX_MD_SIZE];     // Final output
-    unsigned int        m_mdLen;                        // Length of digest
     HashType            m_hashType;                     // What type of hash is this?
 
 };

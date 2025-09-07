@@ -19,9 +19,6 @@
 #if !defined(XSEC_OPENSSL_SUPPORT_H)
 #define XSEC_OPENSSL_SUPPORT_H 1
 
-#include <array>
-#include <string>
-
 #if defined (XSEC_HAVE_OPENSSL)
 #include <openssl/opensslv.h>
 #if (OPENSSL_VERSION_NUMBER > 0x30000000L)
@@ -110,19 +107,26 @@ private:
 template <bool EnableMD5>
 struct OpenSSLDigestAlgorithm
 {
+    static constexpr const char *md5 = (EnableMD5) ? "MD5" : "";
+    static constexpr const char *algorithm_names[] = { 
+        "", 
+        "SHA1", 
+        md5, 
+        "SHA224", 
+        "SHA256", 
+        "SHA384", 
+        "SHA512", 
+    };
+
+    static const char *getAlgorithmName(XSECCryptoHash::HashType type)
+    {
+        return algorithm_names[type];
+    }
+
     static const EVP_MD* getAlgorithm(XSECCryptoHash::HashType type)
     {
-        static constexpr const char *md5 = (EnableMD5) ? "MD5" : "";
-        static constexpr const char *algorithm_names[] = { 
-            "", 
-            "SHA1", 
-            md5, 
-            "SHA224", 
-            "SHA256", 
-            "SHA384", 
-            "SHA512", 
-        };
-        const char *algorithm_name = algorithm_names[type];
+        
+        const char *algorithm_name = getAlgorithmName(type);
         const EVP_MD *evp_md(nullptr); 
         if(strlen(algorithm_name) > 0)
         {

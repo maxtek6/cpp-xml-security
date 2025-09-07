@@ -42,7 +42,7 @@
 
 // Constructors/Destructors
 
-OpenSSLCryptoHashHMAC::OpenSSLCryptoHashHMAC(HashType alg) : m_mdLen(0),
+OpenSSLCryptoHashHMAC::OpenSSLCryptoHashHMAC(HashType alg) :
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L)
     mp_hctx(&m_hctx_store)
 #else
@@ -55,7 +55,6 @@ OpenSSLCryptoHashHMAC::OpenSSLCryptoHashHMAC(HashType alg) : m_mdLen(0),
         throw XSECCryptoException(XSECCryptoException::ECError, "OpenSSL::CryptoHashHMAC - cannot allocate contexts");
 
     // Initialise the digest
-
     mp_md = OpenSSLDigestAlgorithm<true>::getAlgorithm(alg);
 
     if(!mp_md) {

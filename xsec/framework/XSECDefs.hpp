@@ -37,6 +37,9 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <array>
+#include <memory>
+#include <string>
 
 // Include the generated include file
 

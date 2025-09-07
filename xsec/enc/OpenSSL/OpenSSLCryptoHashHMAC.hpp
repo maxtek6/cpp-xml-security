@@ -35,6 +35,7 @@
 #include <xsec/enc/XSECCryptoHash.hpp>
 #include <xsec/utils/XSECSafeBuffer.hpp>
 
+
 // OpenSSL Includes
 #if defined (XSEC_HAVE_OPENSSL)
 
@@ -172,10 +173,8 @@ private:
     OpenSSLCryptoHashHMAC();
 
     const EVP_MD        * mp_md;                        // Digest instance
-    unsigned char       m_mdValue[EVP_MAX_MD_SIZE];     // Final output
-    unsigned int        m_mdLen;                        // Length of digest
     HashType            m_hashType;                     // What type of hash is this?
-    HMAC_CTX            * mp_hctx;                        // Context for HMAC
+    HMAC_CTX            *mp_hctx;                       // Context for HMAC
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L)
     HMAC_CTX            m_hctx_store;                   // Context for HMAC - store
 #endif

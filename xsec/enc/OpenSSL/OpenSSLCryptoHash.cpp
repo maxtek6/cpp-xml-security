@@ -45,8 +45,7 @@ OpenSSLCryptoHash::OpenSSLCryptoHash(HashType alg) :
 #else
     mp_mdctx(EVP_MD_CTX_new())
 #endif
-	, m_mdLen(0)
- {
+{
     if (!mp_mdctx)
         throw XSECCryptoException(XSECCryptoException::ECError, "OpenSSL:CryptoCryptoHash - cannot allocate contexts");
 
@@ -97,13 +96,12 @@ unsigned int OpenSSLCryptoHash::finish(unsigned char * hash,
     unsigned int retLen;
 
     // Finish up and copy out hash, returning the length
+    if (EVP_MD_size(mp_md) > (int) maxLength) {
 
-    EVP_DigestFinal(mp_mdctx, m_mdValue, &m_mdLen);
-
-    // Copy to output buffer
-    
-    retLen = (maxLength > m_mdLen ? m_mdLen : maxLength);
-    memcpy(hash, m_mdValue, retLen);
+        throw XSECCryptoException(XSECCryptoException::MemoryError,
+            "OpenSSL:Hash - Output buffer not big enough for hash");
+    }
+    EVP_DigestFinal(mp_mdctx, hash, &retLen);
 
     return retLen;
 
