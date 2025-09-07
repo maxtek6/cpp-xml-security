@@ -168,7 +168,14 @@ public :
     //@}
 
 private:
-
+    class HMACImpl
+    {
+    public:
+        virtual void setAlgorithm(const char *alg) = 0;
+        virtual void initialize(const unsigned char *key, int keylen) = 0;
+        virtual void update(const unsigned char *data, int len) = 0;
+        virtual void finalize(unsigned char *md, unsigned int *len) = 0;
+    };
     // Not implemented constructors
     OpenSSLCryptoHashHMAC();
 
