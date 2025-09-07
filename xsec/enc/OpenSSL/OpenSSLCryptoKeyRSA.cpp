@@ -262,31 +262,7 @@ namespace {
 };
 
 const EVP_MD* getDigestFromHashType(XSECCryptoHash::HashType type) {
-
-    const EVP_MD* evp_md = NULL;
-
-    switch (type) {
-        case XSECCryptoHash::HASH_SHA1:
-            evp_md = EVP_get_digestbyname("SHA1");
-            break;
-        case XSECCryptoHash::HASH_SHA224:
-            evp_md = EVP_get_digestbyname("SHA224");
-            break;
-        case XSECCryptoHash::HASH_SHA256:
-            evp_md = EVP_get_digestbyname("SHA256");
-            break;
-        case XSECCryptoHash::HASH_SHA384:
-            evp_md = EVP_get_digestbyname("SHA384");
-            break;
-        case XSECCryptoHash::HASH_SHA512:
-            evp_md = EVP_get_digestbyname("SHA512");
-            break;
-
-        default:
-            ;
-    }
-
-    return evp_md;
+    return OpenSSLDigestAlgorithm<false>::getAlgorithm(type);
 }
 
 

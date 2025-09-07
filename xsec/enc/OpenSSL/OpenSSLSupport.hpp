@@ -19,13 +19,26 @@
 #if !defined(XSEC_OPENSSL_SUPPORT_H)
 #define XSEC_OPENSSL_SUPPORT_H 1
 
+#include <array>
+#include <string>
+
 #if defined (XSEC_HAVE_OPENSSL)
+#include <openssl/opensslv.h>
+#if (OPENSSL_VERSION_NUMBER > 0x30000000L)
+    
+#elif (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+#endif
+
 #include <openssl/evp.h>
 #include <openssl/dsa.h>
 #include <openssl/rsa.h>
 #if defined (XSEC_OPENSSL_HAVE_EC)
 #include <openssl/ecdsa.h>
 #endif
+
+#include <xsec/framework/XSECDefs.hpp>
+#include <xsec/enc/XSECCryptoException.hpp>
+#include <xsec/enc/XSECCryptoHash.hpp>
 
 // Our own helper functions
 const BIGNUM *DSA_get0_pubkey(const DSA *dsa);
@@ -94,6 +107,35 @@ private:
 #endif    
 };
 
+template <bool EnableMD5>
+struct OpenSSLDigestAlgorithm
+{
+    static const EVP_MD* getAlgorithm(XSECCryptoHash::HashType type)
+    {
+        static constexpr const char *md5 = (EnableMD5) ? "MD5" : "";
+        static constexpr const char *algorithm_names[] = { 
+            "", 
+            "SHA1", 
+            md5, 
+            "SHA224", 
+            "SHA256", 
+            "SHA384", 
+            "SHA512", 
+        };
+        const char *algorithm_name = algorithm_names[type];
+        const EVP_MD *evp_md(nullptr); 
+        if(strlen(algorithm_name) > 0)
+        {
+            evp_md = EVP_get_digestbyname(algorithm_name);
+            if (!evp_md) {
+                const std::string err = "OpenSSL:Hash - " + std::string(algorithm_name) + " not supported by this version of OpenSSL";
+                throw XSECCryptoException(XSECCryptoException::MDError,
+                    err.c_str());
+            }
+        }
+        return evp_md;
+    }
+};
 
 #endif
 #endif

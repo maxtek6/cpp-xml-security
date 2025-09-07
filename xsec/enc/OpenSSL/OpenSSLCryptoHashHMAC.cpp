@@ -36,6 +36,7 @@
 #include <xsec/enc/XSECCryptoException.hpp>
 #include <xsec/enc/XSECCryptoKeyHMAC.hpp>
 #include <xsec/enc/OpenSSL/OpenSSLCryptoHashHMAC.hpp>
+#include <xsec/enc/OpenSSL/OpenSSLSupport.hpp>
 
 #include <memory.h>
 
@@ -55,63 +56,7 @@ OpenSSLCryptoHashHMAC::OpenSSLCryptoHashHMAC(HashType alg) : m_mdLen(0),
 
     // Initialise the digest
 
-    switch (alg) {
-
-    case (XSECCryptoHash::HASH_SHA1) :
-    
-        mp_md = EVP_get_digestbyname("SHA1");
-        break;
-
-    case (XSECCryptoHash::HASH_MD5) :
-    
-        mp_md = EVP_get_digestbyname("MD5");
-        break;
-
-    case (XSECCryptoHash::HASH_SHA224) :
-    
-        mp_md = EVP_get_digestbyname("SHA224");
-        if (mp_md == NULL) {
-            throw XSECCryptoException(XSECCryptoException::MDError,
-            "OpenSSL:Hash - SHA224 not supported by this version of OpenSSL"); 
-        }
-
-        break;
-
-    case (XSECCryptoHash::HASH_SHA256) :
-    
-        mp_md = EVP_get_digestbyname("SHA256");
-        if (mp_md == NULL) {
-            throw XSECCryptoException(XSECCryptoException::MDError,
-            "OpenSSL:Hash - SHA256 not supported by this version of OpenSSL"); 
-        }
-
-        break;
-
-    case (XSECCryptoHash::HASH_SHA384) :
-    
-        mp_md = EVP_get_digestbyname("SHA384");
-        if (mp_md == NULL) {
-            throw XSECCryptoException(XSECCryptoException::MDError,
-            "OpenSSL:Hash - SHA384 not supported by this version of OpenSSL"); 
-        }
-
-        break;
-
-    case (XSECCryptoHash::HASH_SHA512) :
-    
-        mp_md = EVP_get_digestbyname("SHA512");
-        if (mp_md == NULL) {
-            throw XSECCryptoException(XSECCryptoException::MDError,
-            "OpenSSL:Hash - SHA512 not supported by this version of OpenSSL"); 
-        }
-
-        break;
-
-    default :
-
-        mp_md = NULL;
-
-    }
+    mp_md = OpenSSLDigestAlgorithm<true>::getAlgorithm(alg);
 
     if(!mp_md) {
 
@@ -198,15 +143,13 @@ unsigned int OpenSSLCryptoHashHMAC::finish(unsigned char * hash,
                                        unsigned int maxLength) {
 
     unsigned int retLen;
-
-    // Finish up and copy out hash, returning the length
-
-    HMAC_Final(mp_hctx, m_mdValue, &m_mdLen);
-
-    // Copy to output buffer
     
-    retLen = (maxLength > m_mdLen ? m_mdLen : maxLength);
-    memcpy(hash, m_mdValue, retLen);
+    if(EVP_MD_size(mp_md) > (int) maxLength) {
+
+        throw XSECCryptoException(XSECCryptoException::MemoryError,
+            "OpenSSL:HashHMAC - Output buffer not big enough for HMAC");
+    }
+    HMAC_Final(mp_hctx, hash, &retLen);
 
     return retLen;
 

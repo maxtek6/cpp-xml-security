@@ -32,6 +32,7 @@
 #if defined (XSEC_HAVE_OPENSSL)
 
 #include <xsec/enc/OpenSSL/OpenSSLCryptoHash.hpp>
+#include <xsec/enc/OpenSSL/OpenSSLSupport.hpp>
 #include <xsec/enc/XSECCryptoException.hpp>
 
 #include <memory.h>
@@ -49,64 +50,7 @@ OpenSSLCryptoHash::OpenSSLCryptoHash(HashType alg) :
     if (!mp_mdctx)
         throw XSECCryptoException(XSECCryptoException::ECError, "OpenSSL:CryptoCryptoHash - cannot allocate contexts");
 
-
-    switch (alg) {
-
-    case (XSECCryptoHash::HASH_SHA1) :
-    
-        mp_md = EVP_get_digestbyname("SHA1");
-        break;
-
-    case (XSECCryptoHash::HASH_MD5) :
-    
-        mp_md = EVP_get_digestbyname("MD5");
-        break;
-
-    case (XSECCryptoHash::HASH_SHA224) :
-    
-        mp_md = EVP_get_digestbyname("SHA224");
-        if (mp_md == NULL) {
-            throw XSECCryptoException(XSECCryptoException::MDError,
-            "OpenSSL:Hash - SHA224 not supported by this version of OpenSSL"); 
-        }
-
-        break;
-
-    case (XSECCryptoHash::HASH_SHA256) :
-    
-        mp_md = EVP_get_digestbyname("SHA256");
-        if (mp_md == NULL) {
-            throw XSECCryptoException(XSECCryptoException::MDError,
-            "OpenSSL:Hash - SHA256 not supported by this version of OpenSSL"); 
-        }
-
-        break;
-
-    case (XSECCryptoHash::HASH_SHA384) :
-    
-        mp_md = EVP_get_digestbyname("SHA384");
-        if (mp_md == NULL) {
-            throw XSECCryptoException(XSECCryptoException::MDError,
-            "OpenSSL:Hash - SHA384 not supported by this version of OpenSSL"); 
-        }
-
-        break;
-
-    case (XSECCryptoHash::HASH_SHA512) :
-    
-        mp_md = EVP_get_digestbyname("SHA512");
-        if (mp_md == NULL) {
-            throw XSECCryptoException(XSECCryptoException::MDError,
-            "OpenSSL:Hash - SHA512 not supported by this version of OpenSSL"); 
-        }
-
-        break;
-
-    default :
-
-        mp_md = NULL;
-
-    }
+    mp_md = OpenSSLDigestAlgorithm<true>::getAlgorithm(alg);
 
     if(!mp_md) {
 
