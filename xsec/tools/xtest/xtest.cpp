@@ -503,7 +503,7 @@ bool reValidateSig(DOMImplementation *impl, DOMDocument * inDoc, XSECCryptoKey *
 		sig->setSigningKey(k);
 
 		bool ret = sig->verify();
-
+		prov.releaseSignature(sig);
 		doc->release();
 
 		return ret;
@@ -548,12 +548,12 @@ void unitTestEnvelopingSignature(DOMImplementation * impl) {
 
 		XSECProvider prov;
 		std::unique_ptr<XSECURIResolver> resolver( new XSECURIResolverXerces());
-		DSIGSignature *sig;
+		std::unique_ptr<DSIGSignature, std::function<void(DSIGSignature *)>> sig(nullptr, [&](DSIGSignature* ptr) { prov.releaseSignature(ptr); });
 		DOMElement *sigNode;
 
 		prov.setDefaultURIResolver(resolver.get());
 
-		sig = prov.newSignature();
+		sig.reset(prov.newSignature());
 		sig->setDSIGNSPrefix(MAKE_UNICODE_STRING("ds"));
 		sig->setPrettyPrint(true);
 
@@ -772,11 +772,11 @@ void unitTestLongSHA(DOMImplementation * impl) {
 		XSECProvider prov;
 		std::unique_ptr<XSECURIResolver> resolver(new XSECURIResolverXerces());
 		prov.setDefaultURIResolver(resolver.get());
-		DSIGSignature *sig;
+		std::unique_ptr<DSIGSignature, std::function<void(DSIGSignature *)>> sig(nullptr, [&](DSIGSignature* ptr) { prov.releaseSignature(ptr); });
 		DOMElement *sigNode;
 		DSIGReference *ref[4];
 		
-		sig = prov.newSignature();
+		sig.reset(prov.newSignature());
 		sig->setDSIGNSPrefix(MAKE_UNICODE_STRING("ds"));
 		sig->setPrettyPrint(true);
 
@@ -1157,7 +1157,7 @@ void testSignature(DOMImplementation *impl) {
 
 	XSECProvider prov;
 	std::unique_ptr<XSECURIResolver> resolver(new XSECURIResolverXerces());
-	DSIGSignature *sig;
+	std::unique_ptr<DSIGSignature, std::function<void(DSIGSignature *)>> sig(nullptr, [&](DSIGSignature* ptr) { prov.releaseSignature(ptr); });
 	DSIGReference *ref[10];
 	DOMElement *sigNode;
 	int refCount;
@@ -1170,7 +1170,7 @@ void testSignature(DOMImplementation *impl) {
 		 * Now we have a document, create a signature for it.
 		 */
 		
-		sig = prov.newSignature();
+		sig.reset(prov.newSignature());
 		sig->setDSIGNSPrefix(MAKE_UNICODE_STRING("ds"));
 		sig->setPrettyPrint(true);
 
@@ -1327,7 +1327,7 @@ void testSignature(DOMImplementation *impl) {
 		}
 
 		// Don't need the signature now the DOM structure is in place
-		prov.releaseSignature(sig);
+		// prov.releaseSignature(sig.release());
 
 		/*
 		 * Now serialise the document to memory so we can re-parse and check from scratch
@@ -1394,7 +1394,7 @@ void testSignature(DOMImplementation *impl) {
 		 * Validate signature
 		 */
 
-		sig = prov.newSignatureFromDOM(doc);
+		sig.reset(prov.newSignatureFromDOM(doc));
 		sig->load();
 		sig->setSigningKey(createHMACKey((unsigned char *) "secret"));
 

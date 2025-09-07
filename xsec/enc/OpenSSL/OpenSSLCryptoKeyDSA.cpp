@@ -447,6 +447,8 @@ unsigned int OpenSSLCryptoKeyDSA::signBase64Signature(unsigned char * hashBuf,
             "OpenSSL:DSA - Error base64 encoding signature");
     }
 
+    DSA_SIG_free(dsa_sig);
+
     return sigValLen;
 }
 
